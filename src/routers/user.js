@@ -9,7 +9,7 @@ const  Post = require("../models/post")
 
 
 router.get("/", (req, res) => {
-     res.send("Welcomw to twitter API")
+     res.send("Welcome to twitter API")
 })
 
 router.post("/register", async (req, res)=>{
