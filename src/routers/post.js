@@ -23,7 +23,7 @@ router.post("/createpost",requiredlogin, async (req, res)=>{
                // console.log(req.user)
 
                const result = await newpost.save(); 
-               res.status(201).send("post created"); 
+               res.status(201).json({"success" : "post created"}); 
 
 
 
@@ -40,14 +40,20 @@ router.get("/allpost", async (req , res)=>{
           res.send(tweets); 
 
      }
-     catch(e){res.send(e)}
+     catch(e){res.json({"error" : "no post here"})}
 
 })
 
 router.get("/mypost", requiredlogin, (req, res)=>{
      Post.find({postedBy : req.user._id})
      .then(mypost =>{res.json({mypost})    })
-     .catch(e =>{res.send(e)})
+     .catch(e =>{res.statues(422).json({"error":"can't find post "})})
+})
+
+router.get("/myprofile", requiredlogin, (req, res)=>{
+     Register.find({_id : req.user._id})
+     .then(mypost =>{res.json({mypost})    })
+     .catch(e =>{res.status(404).json({"error":"you are not registerd"})})
 })
 
 router.delete("/deletepost/:id",requiredlogin, async (req, res)=>{
@@ -56,19 +62,19 @@ router.delete("/deletepost/:id",requiredlogin, async (req, res)=>{
           const _id = req.params.id;
           // console.log(_id)
           const findPost = await Post.findById({_id});
-          // console.log(findPost)
+          console.log("postid ", findPost)
           const post = Post.findById(_id);
           // console.log("this is user " + req.user._id + " this is post " +  findPost._id)
           if(findPost.postedBy.toString() == req.user._id.toString()){
 
           // if(post._id === )
           const deletedPost = await Post.findByIdAndDelete(_id);
-     } else return res.send("you  cant delete others post") 
+     } else return res.json({"error" : "you  can't delete others post"}) 
 
           if(!_id){
-               return res.status(400).send("wrond id"); 
+               return res.status(400).json({"error" : "wrong id"})  
           }
-          res.status(200).send("deleted")
+          res.status(200).json({"success" : "you deleted the post"}) 
      }
      catch(e){
           res.status(500).send(e);
@@ -78,6 +84,7 @@ router.delete("/deletepost/:id",requiredlogin, async (req, res)=>{
 
 router.patch("/follow", requiredlogin, async (req, res)=>{
 
+     try {
      const follower = req.body.following;
      // console.log("this is follower " + follower)
 
@@ -93,7 +100,10 @@ router.patch("/follow", requiredlogin, async (req, res)=>{
      // console.log( "this is me ",  findUser.firstname, findUser._id);
      const newresult = await Register.findByIdAndUpdate( {_id : findUser._id}, { $push: {followers : req.user._id}} , {new:true})
      // console.log( "this is me ",  findUser);
-     res.send("updated")
+     res.status(200).json({"success" : "now following"}) 
+     }
+     catch(e) {res.status(400).json({"error" : "not a valid user"}) 
+}
 })
 
 router.patch("/unfollow", requiredlogin, async (req, res)=>{
@@ -106,9 +116,9 @@ router.patch("/unfollow", requiredlogin, async (req, res)=>{
      
      //removing from the follewers data
      const followerRem = await Register.findByIdAndUpdate({_id:follower}, { $pull : {followers: req.user._id}}, {new : true})
-     res.send("ok")
+      res.status(200).json({"success" : "now unfollowing"}) 
      }
-     catch(e) { res.send(e)}
+     catch(e) {res.status(400).json({"error" : "not a valid user"})}
 
 })
 
@@ -119,9 +129,9 @@ router.patch("/like",requiredlogin, async(req, res)=>{
           const postid = req.body.postid;
           // console.log(postid)
           const result = await Post.findByIdAndUpdate( {_id : postid}, { $push: {like : req.user._id}} , {new:true})
-          res.send("liked"); 
+          res.status(200).json({"success" : "liked"}) ; 
      }
-     catch (e) {res.send(e)}
+      catch(e) {res.status(400).json({"error" : "not a valid post"})}
 })
 
 router.patch("/unlike",requiredlogin, async(req, res)=>{
@@ -130,9 +140,9 @@ router.patch("/unlike",requiredlogin, async(req, res)=>{
           const postid = req.body.postid;
           // console.log(postid)
           const result = await Post.findByIdAndUpdate( {_id : postid}, { $pull: {like : req.user._id}} , {new:true})
-          res.send("Unliked"); 
+          res.status(200).json({"success" : "Unliked"}) ; 
      }
-     catch (e) {res.send(e)}
+     catch(e) {res.status(400).json({"error" : "not a valid post"})}
 })
 
 router.patch("/comment",requiredlogin, async(req, res)=>{
@@ -146,9 +156,9 @@ router.patch("/comment",requiredlogin, async(req, res)=>{
           const postid = req.body.postid
           // console.log(postid)
           const result = await Post.findByIdAndUpdate( {_id : postid}, { $push: {comments : comment}} , {new:true})
-          res.send("comment Posted"); 
+          res.status(200).json({"success" : "comment posted"}) ; 
      }
-     catch (e) {res.send(e)}
+    catch(e) {res.status(400).json({"error" : "not a valid post"})}
 })
 
 
